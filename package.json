@@ -1,8 +1,33 @@
 {
   "name": "brotube",
   "version": "1.0.0",
-  "description": "Spatial Glassmorphic Ad-Free YouTube Desktop Client & 4K/8K Media Downloader",
+  "description": "Spatial Glassmorphic Ad-Free YouTube Desktop Client & Lossless 4K/8K Media Downloader",
   "main": "src/main/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SatyamPandey001/BroTube.git"
+  },
+  "homepage": "https://github.com/SatyamPandey001/BroTube#readme",
+  "bugs": {
+    "url": "https://github.com/SatyamPandey001/BroTube/issues"
+  },
+  "keywords": [
+    "youtube",
+    "electron",
+    "yt-dlp",
+    "adblock",
+    "glassmorphism",
+    "visionos",
+    "4k-downloader",
+    "8k-downloader",
+    "ffmpeg",
+    "audio-dsp",
+    "desktop-app",
+    "windows11"
+  ],
+  "author": "Satyam Pandey <satyam2002july@gmail.com> (https://github.com/SatyamPandey001)",
+  "license": "MIT",
+  "type": "commonjs",
   "scripts": {
     "start": "electron .",
     "test": "node test/self-check.js",
@@ -48,10 +73,6 @@
       "shortcutName": "BroTube"
     }
   },
-  "keywords": [],
-  "author": "ThreeSilverEyes",
-  "license": "UNLICENSED",
-  "type": "commonjs",
   "devDependencies": {
     "electron": "^44.7.0",
     "electron-builder": "^25.1.8"

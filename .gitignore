@@ -12,19 +12,22 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
-# IDE
+# IDE & Editor caches
 .vscode/
 .idea/
 *.swp
 *.swo
+.obsidian/
+BroTube_Vault/.obsidian/
 
-# Logs
+# Logs & Temporary files
 *.log
 npm-debug.log*
 
-# Environment
+# Environment & Local Secrets
 .env
 .env.local
 
-# BroTube Vault (user data)
-BroTube_Vault/
+# AI CLI Local State
+.agy/
+.gemini/

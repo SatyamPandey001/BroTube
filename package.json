@@ -1,0 +1,59 @@
+{
+  "name": "brotube",
+  "version": "1.0.0",
+  "description": "Spatial Glassmorphic Ad-Free YouTube Desktop Client & 4K/8K Media Downloader",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/self-check.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.brotube.app",
+    "productName": "BroTube",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "src/renderer/assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "src/renderer/assets/icon.ico",
+      "uninstallerIcon": "src/renderer/assets/icon.ico",
+      "installerHeaderIcon": "src/renderer/assets/icon.ico",
+      "installerSidebar": "src/renderer/assets/installerSidebar.bmp",
+      "uninstallerSidebar": "src/renderer/assets/installerSidebar.bmp",
+      "installerHeader": "src/renderer/assets/installerHeader.bmp",
+      "include": "build/installer.nsh",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BroTube"
+    }
+  },
+  "keywords": [],
+  "author": "ThreeSilverEyes",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^25.1.8"
+  }
+}

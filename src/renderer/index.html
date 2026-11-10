@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BroTube</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ambient Backlight Canvas -->
+  <div id="ambient-glow" class="ambient-glow"></div>
+
+  <!-- Opening Screen with Fullscreen Spatial Cinema & Kinetic Typography -->
+  <div id="splash-screen" class="splash-screen" title="Click anywhere to skip intro">
+    <div class="splash-ambient-mesh"></div>
+    <div class="splash-glow-halo"></div>
+    
+    <div class="splash-hero-container">
+      <!-- Central Orbital Icon Rig -->
+      <div class="splash-orbital-rig">
+        <div class="splash-orbital-ring splash-ring-outer"></div>
+        <div class="splash-orbital-ring splash-ring-inner"></div>
+        <div class="splash-icon-wrapper">
+          <div class="splash-icon-halo"></div>
+          <img id="splash-icon" class="splash-icon-img" src="assets/logo.png" alt="BroTube Logo">
+        </div>
+      </div>
+
+      <!-- Monumental Typography & Live Telemetry -->
+      <div class="splash-loader">
+        <div class="splash-badge-pill">STUDIO WORKSPACE • LOSSLESS 4K/8K • 32-BIT DSP</div>
+        <div class="splash-brand-title">
+          <span class="splash-word-bro">Bro</span><span class="splash-word-tube">Tube</span>
+        </div>
+        <div class="splash-sub">High-Fidelity Spatial Media Suite</div>
+        
+        <div class="splash-telemetry-box">
+          <div class="splash-progress-track">
+            <div class="splash-progress-fill"></div>
+          </div>
+          <div class="splash-status-row">
+            <span id="splash-status-text" class="splash-status-text">Calibrating lossless DASH mux...</span>
+            <span class="splash-percent">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fullscreen Feature Grid Pillars -->
+      <div class="splash-feature-grid">
+        <div class="splash-feature-card">
+          <div class="splash-card-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ec4899" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <div class="splash-card-content">
+            <div class="splash-card-title">4K/8K Lossless Mux</div>
+            <div class="splash-card-desc">High-bitrate DASH video & FLAC/Opus audio copy</div>
+          </div>
+        </div>
+
+        <div class="splash-feature-card">
+          <div class="splash-card-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#06b6d4" stroke-width="2"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+          </div>
+          <div class="splash-card-content">
+            <div class="splash-card-title">Zero-Ad Shield</div>
+            <div class="splash-card-desc">Deep telemetry defusing & uninterrupted playback</div>
+          </div>
+        </div>
+
+        <div class="splash-feature-card">
+          <div class="splash-card-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#a78bfa" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+          </div>
+          <div class="splash-card-content">
+            <div class="splash-card-title">32-Bit Studio DSP</div>
+            <div class="splash-card-desc">Hardware EQ mastering with dynamic peak limiter</div>
+          </div>
+        </div>
+
+        <div class="splash-feature-card">
+          <div class="splash-card-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </div>
+          <div class="splash-card-content">
+            <div class="splash-card-title">FFmpeg Transcoder</div>
+            <div class="splash-card-desc">Instant offline stream converter & clip trimmer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Splash Footer Bar -->
+    <div class="splash-footer-bar">
+      <span class="splash-footer-left">BroTube Studio Architecture</span>
+      <span class="splash-footer-center">Click anywhere or press ESC to skip</span>
+      <span class="splash-footer-right">Standalone Engine v2.0</span>
+    </div>
+  </div>
+
+  <script>
+    // Bulletproof splash screen failsafe: guaranteed dismiss after max 3s
+    (function() {
+      const s = document.getElementById('splash-screen');
+      if (!s) return;
+      setTimeout(() => {
+        if (!s.classList.contains('fade-out')) {
+          s.classList.add('fade-out');
+          setTimeout(() => { s.style.display = 'none'; }, 600);
+        }
+      }, 3000);
+    })();
+  </script>
+
+  <!-- Main Shell -->
+  <div class="app-container">
+    <!-- Top Header & Window Chrome -->
+    <header class="app-header">
+      <div class="drag-region">
+        <div class="brand">
+          <div class="brand-icon" title="BroTube">
+            <img src="assets/logo.png" alt="BroTube Logo" class="brand-logo-img">
+          </div>
+          <span class="brand-title">BroTube</span>
+        </div>
+
+        <!-- Navigation Cluster -->
+        <div class="nav-cluster no-drag">
+          <button id="btn-back" class="nav-btn" title="Back">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button id="btn-forward" class="nav-btn" title="Forward">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button id="btn-reload" class="nav-btn" title="Reload">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+
+        <!-- Navigation Tabs: Home, Trending, Subscriptions, Library -->
+        <nav class="nav-destination-tabs no-drag">
+          <button class="nav-dest-tab active" data-url="https://www.youtube.com" title="YouTube Home">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-dest-tab" data-url="https://www.youtube.com/hashtag/trending" title="Trending">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span>Trending</span>
+          </button>
+          <button class="nav-dest-tab" data-url="https://www.youtube.com/feed/subscriptions" title="Subscriptions">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            <span>Subscriptions</span>
+          </button>
+          <button class="nav-dest-tab" data-url="https://www.youtube.com/feed/library" title="Library">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Library</span>
+          </button>
+        </nav>
+
+        <!-- Draggable space across top middle of window frame -->
+        <div class="header-drag-filler"></div>
+      </div>
+
+      <!-- Right Header: Quick Actions, Settings & Window Controls -->
+      <div class="header-right no-drag">
+        <!-- Direct Primary Download Action -->
+        <button id="btn-quick-download" class="action-btn peak-btn header-download-btn" title="Download Video or Audio with Quality Selection">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span>Download</span>
+        </button>
+
+        <!-- Quick Share Video Action -->
+        <button id="btn-quick-share" class="header-icon-btn" title="Share Video (WhatsApp, Socials & Copy Link)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+
+        <!-- Downloads Hub & Queue Button -->
+        <button id="btn-drawer-toggle" class="header-icon-btn" title="Downloads Hub & Queue">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="drawer-active-badge" class="drawer-active-badge hidden">0</span>
+        </button>
+
+        <!-- Settings & Tools Menu Toggle -->
+        <button id="btn-settings-toggle" class="header-icon-btn" title="Settings & Tools">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+
+        <!-- Window Control Buttons -->
+        <div class="window-controls">
+          <button id="win-min" class="win-btn" title="Minimize">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button id="win-max" class="win-btn" title="Maximize">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+          </button>
+          <button id="win-close" class="win-btn win-close" title="Close">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Embedded YouTube WebView Container -->
+    <main class="webview-container">
+      <webview id="yt-webview" src="https://www.youtube.com" preload="../preload/guest-preload.js" partition="persist:brotube" allowpopups></webview>
+    </main>
+
+    <!-- Dedicated Bottom-Left Ko-fi Floating Overlay -->
+    <div id="kofi-floating-widget" class="kofi-floating-widget" title="Support BroTube on Ko-fi">
+      <button id="btn-kofi-floating" class="kofi-floating-btn" type="button" aria-label="Support BroTube on Ko-fi">
+        <span class="kofi-floating-icon">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="#f59e0b"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
+        </span>
+        <span class="kofi-floating-text">Support on Ko-fi</span>
+        <span class="kofi-floating-badge">☕ Free App</span>
+      </button>
+      <button id="btn-kofi-float-close" class="kofi-floating-close" type="button" title="Minimize widget">&times;</button>
+    </div>
+
+    <!-- Consolidated Settings & Tools Popover (Segmented Studio Hub) -->
+    <div id="settings-popover" class="glass-popover hidden">
+      <div class="popover-header">
+        <div class="popover-title">Studio Settings & Tools</div>
+      </div>
+
+      <!-- Segmented Navigation Tabs -->
+      <div class="settings-nav-tabs">
+        <button type="button" class="settings-nav-tab active" data-tab="general">General</button>
+        <button type="button" class="settings-nav-tab" data-tab="audio">Audio DSP</button>
+        <button type="button" class="settings-nav-tab" data-tab="shield">Shield</button>
+        <button type="button" class="settings-nav-tab" data-tab="tools">Tools</button>
+      </div>
+
+      <!-- Tab 1: General -->
+      <div id="settings-panel-general" class="settings-tab-panel active">
+        <div class="settings-actions-list">
+          <button id="btn-open-folder" class="settings-item-btn" title="Open Downloads folder on PC">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Open Downloads Folder</span>
+          </button>
+
+          <button id="btn-change-folder" class="settings-item-btn" title="Choose custom download folder">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+            <span>Change Download Folder</span>
+          </button>
+
+          <button id="btn-sync-cookies" class="settings-item-btn" title="Sync YouTube login and browser cookies for verified downloads">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="3"/></svg>
+            <span>Sync YouTube Auth / Cookies</span>
+          </button>
+
+          <button id="btn-logout-session" class="settings-item-btn" title="Log out from YouTube and purge saved session credentials">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Log Out & Clear Session</span>
+          </button>
+
+          <!-- Global Multi-Language Selector -->
+          <div class="settings-row" style="margin-top: 6px;">
+            <div class="settings-label">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <span id="label-lang-setting">Language</span>
+            </div>
+            <select id="select-language" class="settings-select">
+              <option value="en" selected>English</option>
+              <option value="es">Español</option>
+              <option value="de">Deutsch</option>
+              <option value="fr">Français</option>
+              <option value="hi">हिन्दी</option>
+              <option value="ja">日本語</option>
+            </select>
+          </div>
+
+          <!-- Direct 1-Click Download Mode -->
+          <div class="settings-row" style="margin-top: 6px;">
+            <div class="settings-label">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span>Direct 1-Click Download</span>
+            </div>
+            <button id="btn-direct-dl-toggle" class="theme-switch-btn" title="Download immediately in saved quality without opening modal">
+              <div class="theme-switch-track">
+                <div class="theme-switch-thumb"></div>
+              </div>
+              <span id="direct-dl-label" class="theme-label-text">Off</span>
+            </button>
+          </div>
+
+          <button id="btn-view-terms" class="settings-item-btn" style="margin-top: 4px;" title="View Terms of Service & Legal Disclaimer">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span>Terms & Legal Disclaimer</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 2: Audio DSP -->
+      <div id="settings-panel-audio" class="settings-tab-panel">
+        <!-- Studio DSP Equalizer Presets -->
+        <div class="settings-row">
+          <div class="settings-label">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            <span id="label-eq-setting">Studio EQ</span>
+          </div>
+          <select id="select-eq-preset" class="settings-select">
+            <option value="flat" selected>Flat / Neutral</option>
+            <option value="bass">Bass Boost</option>
+            <option value="vocal">Vocal Clarity</option>
+            <option value="cinema">Cinema Surround</option>
+            <option value="night">Night Mode</option>
+          </select>
+        </div>
+
+        <!-- Animated Audio Spectrum Visualizer -->
+        <div class="audio-spectrum-card">
+          <div class="audio-spectrum-header">
+            <span>DSP Hardware Master</span>
+            <span class="spectrum-badge">32-Bit Float</span>
+          </div>
+          <div class="audio-spectrum-bars">
+            <div class="spectrum-bar"></div>
+            <div class="spectrum-bar"></div>
+            <div class="spectrum-bar"></div>
+            <div class="spectrum-bar"></div>
+            <div class="spectrum-bar"></div>
+            <div class="spectrum-bar"></div>
+            <div class="spectrum-bar"></div>
+            <div class="spectrum-bar"></div>
+            <div class="spectrum-bar"></div>
+            <div class="spectrum-bar"></div>
+          </div>
+        </div>
+
+        <!-- Audio Booster -->
+        <div class="settings-section">
+          <div class="settings-row" style="margin-bottom: 6px;">
+            <div class="settings-label">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              <span>Volume Boost</span>
+            </div>
+            <span id="boost-label" class="badge-text">100%</span>
+          </div>
+          <div class="slider-row">
+            <span class="boost-val">100%</span>
+            <input type="range" id="boost-slider" min="100" max="300" step="10" value="100">
+            <span class="boost-val">300%</span>
+          </div>
+          <div class="boost-info">Peak Limiter active to prevent distortion</div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Shield & Focus -->
+      <div id="settings-panel-shield" class="settings-tab-panel">
+        <!-- Shield Status -->
+        <div class="settings-row">
+          <div class="settings-label">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="#06b6d4"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+            <span id="label-shield-title">Adblock Shield</span>
+          </div>
+          <div id="shield-badge" class="tool-badge">
+            <span id="shield-count">0</span> <span id="label-shield-text">blocked</span>
+          </div>
+        </div>
+
+        <!-- Zen Focus Mode -->
+        <div class="settings-row">
+          <div class="settings-label">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span>Zen Focus Mode</span>
+          </div>
+          <button id="btn-zen-toggle" class="theme-switch-btn" title="Hide comments and recommendation feed for distraction-free watching">
+            <div class="theme-switch-track">
+              <div class="theme-switch-thumb"></div>
+            </div>
+            <span id="zen-label" class="theme-label-text">Off</span>
+          </button>
+        </div>
+
+        <!-- Auto-Redirect Shorts -->
+        <div class="settings-row">
+          <div class="settings-label">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/><path d="M19 12l-7 7-7-7"/></svg>
+            <span>Redirect Shorts</span>
+          </div>
+          <button id="btn-shorts-toggle" class="theme-switch-btn active" title="Convert Shorts to standard video player with seekbar and speed controls">
+            <div class="theme-switch-track">
+              <div class="theme-switch-thumb"></div>
+            </div>
+            <span id="shorts-label" class="theme-label-text">On</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 4: Studio Tools -->
+      <div id="settings-panel-tools" class="settings-tab-panel">
+        <div class="settings-actions-list">
+          <button id="btn-open-transcoder" class="settings-item-btn" title="Lossless Media Transcoder Studio">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            <span id="label-btn-transcoder">Media Transcoder Studio (Pro)</span>
+          </button>
+
+          <button id="btn-kofi-support" class="settings-item-btn highlight-item-btn" title="Support BroTube development on Ko-fi">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="#f59e0b"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
+            <span id="label-btn-kofi">Support BroTube (Ko-fi)</span>
+          </button>
+
+          <button id="btn-pip" class="settings-item-btn" title="Floating Picture-in-Picture">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><rect x="12" y="9" width="8" height="6" rx="1"/></svg>
+            <span>Picture-in-Picture Mode</span>
+          </button>
+
+          <button id="btn-update-ytdlp" class="settings-item-btn" title="Update yt-dlp to latest version">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><polyline points="21 3 21 9 15 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <span>Update yt-dlp Engine</span>
+          </button>
+
+          <!-- Theme Mode Switcher -->
+          <div class="settings-row theme-toggle-row" style="margin-top: 8px;">
+            <div class="settings-label">
+              <span id="theme-icon-slot">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              </span>
+              <span>Theme Mode</span>
+            </div>
+            <button id="btn-theme-toggle" class="theme-switch-btn" title="Toggle Light / Dark Mode">
+              <div class="theme-switch-track">
+                <div class="theme-switch-thumb"></div>
+              </div>
+              <span id="theme-label" class="theme-label-text">Dark</span>
+            </button>
+          </div>
+
+          <!-- Debug Mode & Log Diagnostics Toggle -->
+          <div class="settings-row debug-toggle-row" style="margin-top: 8px;">
+            <div class="settings-label">
+              <span id="debug-icon-slot">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              </span>
+              <span>Debug Engine Mode</span>
+            </div>
+            <button id="btn-debug-toggle" class="theme-switch-btn" title="Enable detailed diagnostic logging and log scanner">
+              <div class="theme-switch-track">
+                <div class="theme-switch-thumb"></div>
+              </div>
+              <span id="debug-label" class="theme-label-text">Off</span>
+            </button>
+          </div>
+
+          <button id="btn-open-log-scanner" class="settings-item-btn" style="margin-top: 6px;" title="Scan and inspect diagnostic logs">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#06b6d4" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span id="label-btn-log-scanner">Diagnostic Log Scanner</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lossless Download Studio Modal -->
+    <div id="pro-modal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Lossless Download Studio</span>
+          </div>
+          <button id="modal-close" class="icon-btn">&times;</button>
+        </div>
+
+        <div id="modal-loading" class="modal-loading">
+          <div class="spinner"></div>
+          <span>Analyzing video streams and codecs...</span>
+        </div>
+
+        <div id="modal-content" class="modal-content hidden">
+          <div class="video-preview-row">
+            <img id="preview-thumb" src="" alt="Thumbnail" class="preview-thumb">
+            <div class="preview-details">
+              <div id="preview-title" class="preview-title">Video Title</div>
+              <div id="preview-channel" class="preview-sub">Channel Name</div>
+              <div id="preview-duration" class="preview-sub">Duration</div>
+              <div class="quick-assets-row">
+                <button id="btn-dl-thumb" type="button" class="chip-btn" title="Download maximum resolution thumbnail image">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span>Grab Artwork</span>
+                </button>
+                <button id="btn-dl-subs" type="button" class="chip-btn" title="Download English subtitles / transcript (.srt)">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span>Grab Subtitles</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="quality-select">Select Media Type & Quality</label>
+            <select id="quality-select" class="app-select">
+              <optgroup label="🎬 Video with Audio (Lossless DASH Mux)">
+                <option value="best" selected>🏆 Peak Quality (Best 4K/8K Video + Best Audio)</option>
+                <option value="2160">4K Ultra HD (2160p 60fps)</option>
+                <option value="1440">2K Quad HD (1440p)</option>
+                <option value="1080">Full HD (1080p 60fps)</option>
+                <option value="720">HD (720p)</option>
+              </optgroup>
+              <optgroup label="🎵 Audio Only (Lossless Extractions)">
+                <option value="audio-mp3">🎵 MP3 (320 kbps High Quality)</option>
+                <option value="audio-flac">🎵 FLAC (Lossless Hi-Fi)</option>
+                <option value="audio-opus">🎵 Opus (Crystal Clear)</option>
+              </optgroup>
+              <optgroup label="📦 Standalone Media Assets">
+                <option value="asset-thumbnail">🖼️ Thumbnail Only (PNG / Max Resolution)</option>
+                <option value="asset-subs">📝 Subtitles / Transcript Only (.srt)</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="time-range-box">
+            <label class="custom-check" style="margin-bottom: 0;">
+              <input type="checkbox" id="check-time-range">
+              <span style="font-weight: 600; color: var(--accent-cyan); display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                <span>Clip / Time-Range Download</span>
+              </span>
+            </label>
+            <div id="time-range-controls" class="time-range-controls hidden">
+              <div class="time-input-wrap">
+                <span class="time-label">Start</span>
+                <input type="text" id="time-start" class="time-input" placeholder="00:00" value="00:00">
+              </div>
+              <span class="time-divider">to</span>
+              <div class="time-input-wrap">
+                <span class="time-label">End</span>
+                <input type="text" id="time-end" class="time-input" placeholder="02:30">
+              </div>
+              <button id="btn-stamp-current" type="button" class="chip-btn time-stamp-btn" title="Set start time from current player timestamp">
+                Set Current
+              </button>
+            </div>
+          </div>
+
+          <div class="checkbox-group">
+            <label class="custom-check" id="label-check-playlist" style="display: none; color: var(--accent-cyan); font-weight: 500;">
+              <input type="checkbox" id="check-playlist">
+              <span>Download Entire Playlist (Batch)</span>
+            </label>
+            <label class="custom-check">
+              <input type="checkbox" id="check-subs" checked>
+              <span>Embed Subtitles</span>
+            </label>
+            <label class="custom-check">
+              <input type="checkbox" id="check-thumb" checked>
+              <span>Embed Artwork Thumbnail</span>
+            </label>
+            <label class="custom-check">
+              <input type="checkbox" id="check-chapters" checked>
+              <span>Embed Chapter Markers</span>
+            </label>
+            <label class="custom-check" style="color: var(--accent-pink); font-weight: 500;">
+              <input type="checkbox" id="check-direct-dl">
+              <span>Direct 1-Click Download (skip dialog next time, Shift+Click to reopen)</span>
+            </label>
+          </div>
+
+          <button id="btn-start-pro-download" class="action-btn peak-btn full-btn">
+            <span>Download Lossless File</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spatial UI Alert Modal -->
+    <div id="spatial-alert-modal" class="modal-backdrop hidden">
+      <div class="modal-card alert-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span id="alert-icon" class="alert-icon"></span>
+            <span id="alert-title">Notice</span>
+          </div>
+          <button id="alert-close" class="icon-btn">&times;</button>
+        </div>
+        <div id="alert-body" class="alert-body"></div>
+        <div class="alert-actions">
+          <button id="alert-btn-action" class="action-btn highlight-btn hidden"></button>
+          <button id="alert-btn-primary" class="action-btn peak-btn">Got It</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mandatory Terms of Service & Compliance Gate Modal -->
+    <div id="eula-modal" class="modal-backdrop hidden">
+      <div class="modal-card eula-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#06b6d4" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Terms of Service & Legal Disclaimer</span>
+          </div>
+        </div>
+        <p class="eula-subtitle">Mandatory legal compliance and fair-use agreement required to use BroTube.</p>
+        <div id="eula-scrollbox" class="eula-scrollbox">
+          <h4>1. Acceptance of Terms & Personal Fair-Use Policy</h4>
+          <p>By using BroTube ("the Software"), you explicitly agree to be bound by these Terms of Service. BroTube is provided exclusively as a client-side interface and utility. You certify that you will use this Software strictly for personal, non-commercial, private archival, educational, or fair-use research purposes.</p>
+
+          <h4>2. User Compliance & YouTube Terms of Service</h4>
+          <p>You explicitly acknowledge that YouTube is a trademark of Google LLC. BroTube is NOT affiliated with, sponsored by, or endorsed by Google LLC or YouTube. You are solely and exclusively responsible for complying with YouTube's Terms of Service, applicable community guidelines, and the intellectual property laws of your jurisdiction.</p>
+
+          <h4>3. Copyright Protection & Non-Infringement Obligation</h4>
+          <p>BroTube does not host, store, stream, or license any multimedia content. The Software acts merely as an automated interface to third-party tools. You expressly agree that you will NOT use BroTube to download, copy, distribute, or format-shift any copyrighted audio, video, or intellectual property without explicit authorization from the respective copyright owner or unless expressly permitted by statutory fair-use doctrine.</p>
+
+          <h4>4. As-Is Provision & Absolute Disclaimer of Warranties</h4>
+          <p>THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NONINFRINGEMENT. THE AUTHORS AND CONTRIBUTORS DISCLAIM ALL LIABILITY FOR UNINTERRUPTED OR ERROR-FREE OPERATION.</p>
+
+          <h4>5. Complete Limitation of Liability & Indemnification</h4>
+          <p>UNDER NO CIRCUMSTANCES SHALL THE DEVELOPERS, AUTHORS, OR CONTRIBUTORS OF BROTUBE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO ACCOUNT TERMINATION, COPYRIGHT INFRINGEMENT NOTICES, LOSS OF DATA, STATUTORY DAMAGES, OR LEGAL ACTIONS ARISING FROM YOUR USAGE OR MISUSE OF THE SOFTWARE. YOU AGREE TO DEFEND, INDEMNIFY, AND HOLD HARMLESS THE AUTHORS AGAINST ALL THIRD-PARTY CLAIMS AND COSTS.</p>
+
+          <h4>6. Credential Safety & User Responsibility</h4>
+          <p>Any account credentials or session cookies synced within the Software are processed locally on your machine with on-device cryptographic protection. You bear sole responsibility for the physical and operational security of your device and accounts.</p>
+        </div>
+
+        <div class="eula-checkbox-row">
+          <label class="custom-check">
+            <input type="checkbox" id="check-eula-agree">
+            <span class="eula-check-label">I have read, understood, and unconditionally agree to these Terms of Service, Fair-Use Disclaimer, and Limitation of Liability.</span>
+          </label>
+        </div>
+
+        <div class="modal-actions eula-actions">
+          <button id="btn-eula-decline" class="action-btn danger-outline-btn">Decline & Exit</button>
+          <button id="btn-eula-accept" class="action-btn peak-btn" disabled>Accept & Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ko-fi Community Support Modal -->
+    <div id="kofi-modal" class="modal-backdrop hidden">
+      <div class="modal-card kofi-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="#f59e0b"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
+            <span id="kofi-title">Support BroTube</span>
+          </div>
+          <button id="kofi-close" class="icon-btn">&times;</button>
+        </div>
+        <div class="kofi-body">
+          <div class="kofi-badge-row">
+            <span class="kofi-pill">☕ 100% Free & Open-Source Media Suite</span>
+          </div>
+          <p class="kofi-lead" id="kofi-lead">BroTube is proudly created to provide an uncompromising, zero-ad, lossless 4K/8K media workstation with absolute privacy.</p>
+          <p class="kofi-sub" id="kofi-sub">We don't inject ads, monetize tracking cookies, or lock features behind recurring paywalls. If BroTube enhances your YouTube workflow and saves you hours every month, please consider supporting development on Ko-fi so we can maintain continuous ad-defuser updates, codec improvements, and standalone engine upgrades!</p>
+          <div class="kofi-perks">
+            <div class="kofi-perk-item">⚡ <strong>Zero Ad Interruptions</strong> & instant stream playback</div>
+            <div class="kofi-perk-item">🛡️ <strong>Encrypted Credential Security</strong> with zero telemetry</div>
+            <div class="kofi-perk-item">🚀 <strong>Lossless FFmpeg Transcoding</strong> & Studio DSP audio mastering</div>
+          </div>
+        </div>
+        <div class="modal-actions kofi-actions">
+          <button id="btn-kofi-dismiss" class="action-btn outline-btn">Maybe Later</button>
+          <button id="btn-kofi-donate" class="action-btn peak-btn kofi-gold-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
+            <span id="btn-kofi-donate-text">Support on Ko-fi</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lossless Media Transcoder Studio Modal (Pro) -->
+    <div id="transcoder-modal" class="modal-backdrop hidden">
+      <div class="modal-card transcoder-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            <span id="transcoder-title">Media Transcoder Studio (Pro)</span>
+          </div>
+          <button id="transcoder-close" class="icon-btn">&times;</button>
+        </div>
+        <div class="transcoder-body">
+          <p class="transcoder-sub" id="transcoder-desc">Convert and remaster local media files on your device with bundled FFmpeg lossless stream copy or audiophile studio encoding.</p>
+
+          <div class="form-group" style="margin-top: 12px;">
+            <label id="label-transcode-source">Select Input Media File</label>
+            <div class="file-picker-row">
+              <input type="text" id="transcode-input-path" class="app-input" placeholder="No file selected..." readonly>
+              <button id="btn-select-transcode-file" class="action-btn highlight-btn" type="button">Browse...</button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 10px;">
+            <label id="label-transcode-target">Target Conversion Format</label>
+            <select id="transcode-target-format" class="app-select">
+              <optgroup label="🎬 Video Formats">
+                <option value="mp4" selected>MP4 (Universal Lossless / H.264 + AAC)</option>
+                <option value="mkv">MKV (Matroska Stream Copy - Instant)</option>
+              </optgroup>
+              <optgroup label="🎵 Audiophile Formats">
+                <option value="mp3">MP3 (320 kbps High-Bitrate LAME)</option>
+                <option value="flac">FLAC (Lossless Free Audio Codec)</option>
+                <option value="wav">WAV (Uncompressed PCM 16-bit)</option>
+                <option value="m4a">M4A (AAC 256 kbps Studio Master)</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-top: 10px;">
+            <label id="label-transcode-mode">Encoding Profile</label>
+            <select id="transcode-preset" class="app-select">
+              <option value="lossless" selected>Quality Studio Master (Optimized Video & Audio)</option>
+              <option value="fast">Ultra Fast Stream Copy (Instant Remux if compatible)</option>
+            </select>
+          </div>
+
+          <div id="transcode-status" class="transcode-status-box hidden">
+            <span id="transcode-status-text">Processing conversion...</span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-start-transcode" class="action-btn peak-btn full-btn" disabled>
+            <span id="btn-start-transcode-text">Start Lossless Conversion</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spatial Exit Confirmation Modal -->
+    <div id="exit-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="exit-title-text">
+      <div class="modal-card exit-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <div id="exit-icon-wrap" class="exit-icon-bubble">
+              <svg id="exit-icon-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <span id="exit-title-text">Exit BroTube</span>
+          </div>
+          <button id="exit-close-btn" class="icon-btn" aria-label="Close Exit Modal">&times;</button>
+        </div>
+        <div class="exit-body">
+          <div id="exit-status-pill" class="exit-status-pill hidden">
+            <span class="exit-pulse-dot"></span>
+            <span id="exit-status-count-text">0 Active Tasks</span>
+          </div>
+          <p id="exit-lead-text" class="exit-lead">Are you sure you want to exit BroTube?</p>
+          <p id="exit-detail-text" class="exit-detail">Closing BroTube will cancel ongoing downloads or media conversions. Do you want to quit anyway?</p>
+        </div>
+        <div class="modal-actions exit-actions">
+          <button id="btn-exit-cancel" class="action-btn outline-btn">Cancel</button>
+          <button id="btn-exit-confirm" class="action-btn peak-btn exit-danger-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span id="btn-exit-confirm-text">Quit Anyway</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagnostic Log Scanner Modal -->
+    <div id="log-scanner-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="log-scanner-title">
+      <div class="modal-card log-scanner-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#06b6d4" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/><path d="M4.93 4.93l4.24 4.24M19.07 4.93l-4.24 4.24"/></svg>
+            <span id="log-scanner-title">Diagnostic Log Scanner</span>
+          </div>
+          <button id="log-modal-close" class="icon-btn" aria-label="Close Logs Modal">&times;</button>
+        </div>
+
+        <div class="log-scanner-toolbar">
+          <button id="btn-run-log-scan" class="action-btn peak-btn log-scan-btn" type="button">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Scan Logs for Issues</span>
+          </button>
+          <div class="log-filter-chips">
+            <button class="log-filter-chip active" data-filter="all">All</button>
+            <button class="log-filter-chip" data-filter="DOWNLOAD">Downloads</button>
+            <button class="log-filter-chip" data-filter="ERROR">Errors</button>
+            <button class="log-filter-chip" data-filter="GPU">GPU & System</button>
+          </div>
+          <div class="log-toolbar-actions">
+            <button id="btn-copy-logs" class="chip-btn" type="button" title="Copy logs to clipboard">Copy</button>
+            <button id="btn-clear-logs" class="chip-btn" type="button" title="Clear logs">Clear</button>
+          </div>
+        </div>
+
+        <!-- Automated Diagnostic Scanner Results -->
+        <div id="log-scan-results" class="log-scan-results hidden">
+          <div id="log-scan-summary" class="log-scan-summary"></div>
+          <div id="log-scan-items" class="log-scan-items"></div>
+        </div>
+
+        <!-- Log Console Stream -->
+        <div id="log-console-container" class="log-console-container">
+          <div id="log-console-stream" class="log-console-stream">
+            <div class="log-line system-line">[SYSTEM] Ready to capture download and engine telemetry. Toggle Debug Mode or click Scan Logs.</div>
+          </div>
+        </div>
+
+        <div class="log-modal-footer">
+          <span id="log-status-counter" class="log-counter-text">0 logs loaded</span>
+          <label class="custom-check log-autoscroll-check">
+            <input type="checkbox" id="check-log-autoscroll" checked>
+            <span>Auto-scroll</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dedicated Backdrop Scrim for Downloads Drawer -->
+    <div id="drawer-backdrop" class="drawer-backdrop hidden" aria-hidden="true"></div>
+
+    <aside id="download-drawer" class="download-drawer closed" aria-label="Downloads Hub">
+      <!-- Drawer Header with Live Stats & Actions -->
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <div class="drawer-icon-badge">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div class="drawer-title-meta">
+            <span class="drawer-title-text">Downloads Hub</span>
+            <div class="drawer-status-line">
+              <span id="drawer-status-pill" class="drawer-status-pill">Idle</span>
+            </div>
+          </div>
+        </div>
+        <div class="drawer-actions">
+          <button id="btn-drawer-open-folder" class="drawer-action-btn" title="Open Downloads Folder on PC">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span class="action-btn-text">Folder</span>
+          </button>
+          <button id="btn-drawer-clear-done" class="drawer-action-btn" title="Clear Finished Downloads">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+          <button id="drawer-close" class="drawer-close-btn" title="Close Drawer (Esc)">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Storage Destination Strip -->
+      <div class="drawer-path-bar">
+        <div class="path-bar-left">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span id="drawer-path-text" class="drawer-path-text" title="Current Download Directory">Videos\BroTube</span>
+        </div>
+        <button id="btn-drawer-change-dir" class="drawer-path-change-btn" title="Change Destination Folder">Change</button>
+      </div>
+
+      <!-- Queue Segment Filter Tabs -->
+      <div class="drawer-filter-tabs">
+        <button class="drawer-tab-btn active" data-filter="all">All (<span id="count-all">0</span>)</button>
+        <button class="drawer-tab-btn" data-filter="active">Downloading (<span id="count-active">0</span>)</button>
+        <button class="drawer-tab-btn" data-filter="completed">Finished (<span id="count-completed">0</span>)</button>
+      </div>
+
+      <!-- Scrollable Downloads Queue List -->
+      <div id="downloads-list" class="downloads-list">
+        <div id="downloads-empty" class="downloads-empty">
+          <div class="empty-icon-orbit">
+            <div class="empty-orbit-ring"></div>
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <span class="empty-title">Queue is Empty</span>
+          <p class="empty-desc">Lossless DASH 4K/8K, MP3 audio, thumbnails, and clip exports will appear here with live speed telemetry.</p>
+          <div class="empty-actions">
+            <button id="btn-empty-start-download" class="action-btn peak-btn empty-action-btn" type="button">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>Download Current Video</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

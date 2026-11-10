@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -11,7 +11,6 @@ app.commandLine.appendSwitch('disable-gpu-sandbox');
 app.commandLine.appendSwitch('disable-gpu-watchdog');
 app.commandLine.appendSwitch('disable-direct-composition-video-overlays');
 
-// Mock all IPC handlers to prevent any console/handler errors
 ipcMain.handle('get-default-download-dir', () => 'C:\\Users\\GAURI\\Videos\\BroTube');
 ipcMain.handle('get-debug-mode', () => false);
 ipcMain.handle('set-debug-mode', () => true);
@@ -53,13 +52,13 @@ app.whenReady().then(async () => {
 
   await win.loadFile(path.join(__dirname, '..', 'src', 'renderer', 'index.html'));
 
-  // 1. Capture Splash Screen
-  console.log('Capturing 01-splash-screen.png...');
+  // 1. Splash Screen
+  console.log('Capturing preview-01-splash.png...');
   await sleep(1000);
-  await capture(win, '01-splash-screen.png');
+  await capture(win, 'preview-01-splash.png');
 
-  // Now dismiss splash screen and ACCEPT EULA permanently!
-  console.log('Dismissing splash screen and dismissing EULA modal...');
+  // Dismiss splash & terms
+  console.log('Dismissing splash & EULA...');
   await win.webContents.executeJavaScript(`
     try {
       localStorage.setItem('brotube_eula_v1_accepted', 'true');
@@ -75,30 +74,26 @@ app.whenReady().then(async () => {
       }
       const kofi = document.getElementById('kofi-modal');
       if (kofi) kofi.classList.add('hidden');
+
+      // Navigate webview to trending to get rich video thumbnails
+      const webview = document.getElementById('yt-webview');
+      if (webview) {
+        webview.loadURL('https://www.youtube.com/feed/trending');
+      }
     } catch(e) {
       console.error(e);
     }
   `);
 
-  // Allow webview to load YouTube feed
-  console.log('Waiting 5 seconds for YouTube interface to render...');
-  await sleep(5000);
+  console.log('Waiting 6s for trending feed to render...');
+  await sleep(6000);
 
-  // Guarantee EULA is completely gone before taking main interface shot
-  await win.webContents.executeJavaScript(`
-    const eula = document.getElementById('eula-modal');
-    if (eula) {
-      eula.classList.add('hidden');
-      eula.style.display = 'none';
-    }
-  `);
+  // 2. Main Interface
+  console.log('Capturing preview-02-main-interface.png...');
+  await capture(win, 'preview-02-main-interface.png');
 
-  // 2. Capture Main Interface
-  console.log('Capturing 02-main-interface.png...');
-  await capture(win, '02-main-interface.png');
-
-  // 3. Configure and Capture Pro Download Modal
-  console.log('Triggering and capturing 03-download-modal.png...');
+  // 3. Pro Download Modal
+  console.log('Capturing preview-03-download-modal.png...');
   await win.webContents.executeJavaScript(`
     try {
       const eula = document.getElementById('eula-modal');
@@ -129,7 +124,7 @@ app.whenReady().then(async () => {
     }
   `);
   await sleep(800);
-  await capture(win, '03-download-modal.png');
+  await capture(win, 'preview-03-download-modal.png');
 
   // Close Download Modal
   await win.webContents.executeJavaScript(`
@@ -140,13 +135,10 @@ app.whenReady().then(async () => {
   `);
   await sleep(400);
 
-  // 4. Capture Settings Popover (Audio DSP)
-  console.log('Capturing 04-audio-dsp-settings.png...');
+  // 4. Settings Popover (Audio DSP)
+  console.log('Capturing preview-04-audio-dsp.png...');
   await win.webContents.executeJavaScript(`
     try {
-      const eula = document.getElementById('eula-modal');
-      if (eula) { eula.classList.add('hidden'); eula.style.display = 'none'; }
-
       const pop = document.getElementById('settings-popover');
       if (pop) {
         pop.classList.remove('hidden');
@@ -162,7 +154,7 @@ app.whenReady().then(async () => {
     }
   `);
   await sleep(800);
-  await capture(win, '04-audio-dsp-settings.png');
+  await capture(win, 'preview-04-audio-dsp.png');
 
   // Close Settings Popover
   await win.webContents.executeJavaScript(`
@@ -173,13 +165,10 @@ app.whenReady().then(async () => {
   `);
   await sleep(400);
 
-  // 5. Capture Downloads Hub Drawer
-  console.log('Capturing 05-downloads-hub.png...');
+  // 5. Downloads Hub Drawer
+  console.log('Capturing preview-05-downloads-hub.png...');
   await win.webContents.executeJavaScript(`
     try {
-      const eula = document.getElementById('eula-modal');
-      if (eula) { eula.classList.add('hidden'); eula.style.display = 'none'; }
-
       const drawer = document.getElementById('download-drawer');
       const backdrop = document.getElementById('drawer-backdrop');
       const list = document.getElementById('drawer-downloads-list');
@@ -225,9 +214,9 @@ app.whenReady().then(async () => {
     }
   `);
   await sleep(800);
-  await capture(win, '05-downloads-hub.png');
+  await capture(win, 'preview-05-downloads-hub.png');
 
-  console.log('All 5 screenshots recaptured without EULA!');
+  console.log('All fresh preview screenshots captured!');
   win.destroy();
   app.quit();
   process.exit(0);

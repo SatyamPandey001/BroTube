@@ -46,35 +46,35 @@ Say goodbye to unskippable mid-rolls, anti-adblock nagging modals, bloated memor
 ### 🌟 Kinetic Typography & Splash Entrance
 *Kinetic spring-settle typography with ambient orbital neon glow and diagnostic telemetry bar.*
 <br/><br/>
-<img src="docs/screenshots/01-splash-screen.png" alt="BroTube Splash Screen" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
+<img src="docs/screenshots/preview-01-splash.png" alt="BroTube Splash Screen" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
 
 <br/><br/>
 
 ### 🖥️ Spatial visionOS Liquid Glass Interface
 *Frameless Windows 11 Fluent chrome with 1px specular rim light, Apple SF Pro typography, and YouTube DOM integration.*
 <br/><br/>
-<img src="docs/screenshots/02-main-interface.png" alt="BroTube Main Interface" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
+<img src="docs/screenshots/preview-02-main-interface.png" alt="BroTube Main Interface" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
 
 <br/><br/>
 
 ### ⚡ Lossless 4K/8K Media Download Studio
 *Direct DASH stream extraction (Peak 8K/4K HDR, 1080p60, Lossless FLAC/Opus) with time-range trimming and playlist batching.*
 <br/><br/>
-<img src="docs/screenshots/03-download-modal.png" alt="BroTube Lossless Download Studio Modal" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
+<img src="docs/screenshots/preview-03-download-modal.png" alt="BroTube Lossless Download Studio Modal" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
 
 <br/><br/>
 
 ### 🎛️ 32-Bit Studio DSP & Settings Hub
 *WebAudio hardware equalizer with dynamic peak limiter, 300% volume booster, cookie synchronization, and shield controls.*
 <br/><br/>
-<img src="docs/screenshots/04-audio-dsp-settings.png" alt="BroTube Audio DSP & Studio Settings" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
+<img src="docs/screenshots/preview-04-audio-dsp.png" alt="BroTube Audio DSP & Studio Settings" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
 
 <br/><br/>
 
 ### 📂 Slide-out Downloads Hub & Telemetry Queue
 *Real-time download telemetry, multi-stream progress bars, destination path routing, and playlist tracker.*
 <br/><br/>
-<img src="docs/screenshots/05-downloads-hub.png" alt="BroTube Downloads Hub" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
+<img src="docs/screenshots/preview-05-downloads-hub.png" alt="BroTube Downloads Hub" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
 
 </div>
 
@@ -251,11 +251,11 @@ BroTube/
 ├── build/                        # NSIS installer scripts and packaging configurations
 ├── docs/
 │   └── screenshots/              # High-resolution screenshots used in documentation
-│       ├── 01-splash-screen.png
-│       ├── 02-main-interface.png
-│       ├── 03-download-modal.png
-│       ├── 04-audio-dsp-settings.png
-│       └── 05-downloads-hub.png
+│       ├── preview-01-splash.png
+│       ├── preview-02-main-interface.png
+│       ├── preview-03-download-modal.png
+│       ├── preview-04-audio-dsp.png
+│       └── preview-05-downloads-hub.png
 ├── BroTube_Vault/                # Complete Obsidian architectural documentation
 │   ├── 01 - Architecture & Design.md
 │   ├── 02 - Session Log & Progress.md

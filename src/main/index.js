@@ -102,12 +102,24 @@ async function syncSessionCookies(acquireEphemeral = false) {
       return acquireEphemeral ? acquireEphemeralCookieFile(ENC_COOKIE_FILE) : null;
     }
 
-    // If active encrypted credentials already exist, yield ephemeral session file if requested
+    // If active encrypted credentials already exist, verify they have an authenticated login
     if (fs.existsSync(ENC_COOKIE_FILE)) {
-      return acquireEphemeral ? acquireEphemeralCookieFile(ENC_COOKIE_FILE) : null;
+      const ephem = acquireEphemeral ? acquireEphemeralCookieFile(ENC_COOKIE_FILE) : null;
+      if (ephem) {
+        try {
+          const content = fs.readFileSync(ephem, 'utf8');
+          if (content.includes('LOGIN_INFO') || content.includes('SAPISID') || content.includes('__Secure-3PSID')) {
+            return ephem;
+          }
+          releaseEphemeralCookieFile(ephem);
+          try { fs.unlinkSync(ENC_COOKIE_FILE); } catch {}
+        } catch {
+          if (ephem) releaseEphemeralCookieFile(ephem);
+        }
+      }
     }
 
-    // Migrate any legacy plaintext cookie file to encrypted format, then shred plaintext
+    // Clean up any stale unauthenticated plaintext cookie file
     if (fs.existsSync(COOKIE_FILE)) {
       try {
         const existing = fs.readFileSync(COOKIE_FILE, 'utf8');
@@ -193,8 +205,13 @@ function createMainWindow() {
   mainWindow.on('close', (e) => {
     if (isQuitting) return;
 
-    e.preventDefault();
     const runningTasks = activeDownloads.size + activeConversions;
+    if (runningTasks === 0) {
+      isQuitting = true;
+      return;
+    }
+
+    e.preventDefault();
     if (mainWindow && !mainWindow.isDestroyed()) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();

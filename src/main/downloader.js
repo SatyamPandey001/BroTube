@@ -13,9 +13,28 @@ const PYTHON_CMD = 'python';
 
 let cachedYtDlpRunner = undefined;
 let downloaderLogger = null;
+const activeRetryHandles = new Map();
 
 function setDownloaderLogger(fn) {
   downloaderLogger = fn;
+}
+
+function getAugmentedEnv(customEnv = {}) {
+  const env = { ...process.env, ...customEnv };
+  if (process.platform === 'win32') {
+    const extraPaths = [];
+    const localAppData = process.env.LOCALAPPDATA || '';
+    const nodeWheelDir = path.join(localAppData, 'Python', 'pythoncore-3.14-64', 'Lib', 'site-packages', 'nodejs_wheel');
+    if (fs.existsSync(nodeWheelDir)) extraPaths.push(nodeWheelDir);
+    const ffmpegDir = getFfmpegDir();
+    if (ffmpegDir && fs.existsSync(ffmpegDir)) extraPaths.push(ffmpegDir);
+    const userBin = getUserBinDir();
+    if (fs.existsSync(userBin)) extraPaths.push(userBin);
+    if (extraPaths.length > 0) {
+      env.PATH = extraPaths.join(';') + ';' + (env.PATH || '');
+    }
+  }
+  return env;
 }
 
 function getUserBinDir() {
@@ -38,14 +57,18 @@ function resolveYtDlpRunner(forceRefresh = false) {
 
   // 1. User-space standalone binary (updatable without administrator elevation)
   if (fs.existsSync(userBin)) {
-    cachedYtDlpRunner = {
-      command: userBin,
-      argsPrefix: [],
-      isStandalone: true,
-      binaryPath: userBin,
-      type: 'user-standalone'
-    };
-    return cachedYtDlpRunner;
+    try {
+      if (fs.statSync(userBin).size > 1024 * 1024) {
+        cachedYtDlpRunner = {
+          command: userBin,
+          argsPrefix: [],
+          isStandalone: true,
+          binaryPath: userBin,
+          type: 'user-standalone'
+        };
+        return cachedYtDlpRunner;
+      }
+    } catch {}
   }
 
   // 2. Bundled application binary (packaged extraResources or local project bin)
@@ -58,15 +81,18 @@ function resolveYtDlpRunner(forceRefresh = false) {
   for (const candidate of bundledCandidates) {
     if (candidate && fs.existsSync(candidate)) {
       try {
-        fs.copyFileSync(candidate, userBin);
-        cachedYtDlpRunner = {
-          command: userBin,
-          argsPrefix: [],
-          isStandalone: true,
-          binaryPath: userBin,
-          type: 'user-standalone'
-        };
-        return cachedYtDlpRunner;
+        if (fs.statSync(candidate).size > 1024 * 1024) {
+          try { fs.copyFileSync(candidate, userBin); } catch {}
+          const binToUse = fs.existsSync(userBin) ? userBin : candidate;
+          cachedYtDlpRunner = {
+            command: binToUse,
+            argsPrefix: [],
+            isStandalone: true,
+            binaryPath: binToUse,
+            type: fs.existsSync(userBin) ? 'user-standalone' : 'bundled-standalone'
+          };
+          return cachedYtDlpRunner;
+        }
       } catch {
         cachedYtDlpRunner = {
           command: candidate,
@@ -130,14 +156,18 @@ function stripPythonModuleArgs(args) {
 
 function spawnYtDlp(args, spawnOptions = {}) {
   const runner = resolveYtDlpRunner();
+  const options = {
+    ...spawnOptions,
+    env: getAugmentedEnv(spawnOptions.env)
+  };
   if (runner.isStandalone) {
     const cleanArgs = stripPythonModuleArgs(args);
-    return spawn(runner.command, cleanArgs, spawnOptions);
+    return spawn(runner.command, cleanArgs, options);
   }
   const fullArgs = (Array.isArray(args) && args[0] === '-m' && args[1] === 'yt_dlp')
     ? args
     : [...runner.argsPrefix, ...args];
-  return spawn(runner.command, fullArgs, spawnOptions);
+  return spawn(runner.command, fullArgs, options);
 }
 
 function downloadStandaloneYtDlp() {
@@ -477,14 +507,13 @@ function getBaseYtDlpArgs(cookiePath) {
     '-m', 'yt_dlp',
     '--no-warnings',
     '--js-runtimes', 'node',
-    '--remote-components', 'ejs:github',
-    '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+    '--remote-components', 'ejs:github'
   ];
   const ffmpegDir = getFfmpegDir();
   if (ffmpegDir) {
     args.push('--ffmpeg-location', ffmpegDir);
   }
-  const targetCookie = cookiePath || getDefaultCookiePath();
+  const targetCookie = cookiePath;
   if (targetCookie && fs.existsSync(targetCookie)) {
     try {
       if (fs.statSync(targetCookie).size > 0) {
@@ -529,6 +558,10 @@ function getVideoInfo(url, options = {}) {
     proc.on('close', (code) => {
       if (code !== 0) {
         let errMessage = stderr.trim();
+        // If query failed with 403 Forbidden while using cookies, retry once cleanly without cookies
+        if (!options._isRetry && /HTTP Error 403|Forbidden/i.test(errMessage)) {
+          return resolve(getVideoInfo(url, { ...options, _isRetry: true, cookiePath: null }));
+        }
         if (/Sign in to confirm you'?re not a bot|bot challenge|HTTP Error 429|confirm you are not a bot/i.test(errMessage)) {
           errMessage = "YouTube anti-bot challenge: Please sign in to your YouTube account inside BroTube (click 'Sign in' at top right) or sync browser cookies in Settings.";
         }
@@ -869,6 +902,7 @@ function startDownload(options, onProgress, onComplete, onError) {
     else if (options.isSubtitlesOnly) subFolder = 'subtitles';
     const targetFolder = path.join(options.downloadDir || getDefaultDownloadDir(), subFolder);
     if (code === 0) {
+      activeRetryHandles.delete(taskId);
       if (downloaderLogger) {
         downloaderLogger('DOWNLOAD', `Task ${taskId} finished successfully (alreadyDownloaded: ${isAlreadyDownloaded})`, { taskId, finalPath: finalPath || targetFolder, alreadyDownloaded: isAlreadyDownloaded });
       }
@@ -879,6 +913,17 @@ function startDownload(options, onProgress, onComplete, onError) {
       if (downloaderLogger) {
         downloaderLogger('ERROR', `Task ${taskId} exited with error code ${code}: ${stderr.trim()}`, { taskId, code, error: stderr.trim() });
       }
+      // If download failed with 403 Forbidden while using cookies, retry once cleanly without cookies
+      if (!options._isRetry && /HTTP Error 403|Forbidden/i.test(stderr)) {
+        if (downloaderLogger) {
+          downloaderLogger('RETRY', `Task ${taskId} encountered 403 Forbidden. Retrying without cookies...`, { taskId });
+        }
+        const retryOpts = { ...options, _isRetry: true, cookiePath: null, ephemeralCookiePath: null };
+        const nextHandle = startDownload(retryOpts, onProgress, onComplete, onError);
+        activeRetryHandles.set(taskId, nextHandle);
+        return;
+      }
+      activeRetryHandles.delete(taskId);
       if (typeof onError === 'function') {
         let errMessage = stderr.trim();
         if (/Sign in to confirm you'?re not a bot|bot challenge|HTTP Error 429|confirm you are not a bot/i.test(errMessage)) {
@@ -893,6 +938,11 @@ function startDownload(options, onProgress, onComplete, onError) {
     kill: () => {
       isCancelled = true;
       cleanupCookies();
+      const retryHandle = activeRetryHandles.get(taskId);
+      if (retryHandle && typeof retryHandle.kill === 'function') {
+        retryHandle.kill();
+        activeRetryHandles.delete(taskId);
+      }
       if (process.platform === 'win32' && proc.pid) {
         try {
           const killer = spawn('taskkill', ['/pid', String(proc.pid), '/T', '/F']);

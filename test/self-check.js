@@ -594,6 +594,13 @@ assert(finalAppJs.includes('cachedLogs.length > 600'), 'app.js must bound cached
 assert(!indexCode.includes('exportCookiesToFile'), 'index.js must not import unused legacy exportCookiesToFile');
 console.log('✅ Dislike Retry Cache, Stream Telemetry Capping & Clean Menu Dispatch verified');
 
+// 18. Check 403 Forbidden Auto-Recovery, Standalone Binary Validation & Clean Close Fast-Path
+assert(latestDownloaderCode.includes("retryOpts = { ...options, _isRetry: true, cookiePath: null"), 'startDownload must retry without cookies on 403 Forbidden');
+assert(latestDownloaderCode.includes("fs.statSync(userBin).size > 1024 * 1024"), 'resolveYtDlpRunner must validate standalone binary size');
+assert(indexCode.includes("content.includes('LOGIN_INFO') || content.includes('SAPISID')"), 'syncSessionCookies must verify active login tokens');
+assert(indexCode.includes("if (runningTasks === 0) {\n      isQuitting = true;\n      return;\n    }"), 'main index.js must allow clean window close when no tasks are running');
+console.log('✅ 403 Auto-Recovery, Standalone Validation & Clean Close Fast-Path verified');
+
 // Cookie encryption round-trip (highest-risk code, covers both AES-GCM and safeStorage paths)
 const { encryptCookieData, decryptCookieData } = require('../src/main/downloader');
 const roundTrip = decryptCookieData(encryptCookieData('test-session-cookie'));

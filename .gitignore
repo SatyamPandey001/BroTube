@@ -23,6 +23,10 @@ BroTube_Vault/.obsidian/
 # Logs & Temporary files
 *.log
 npm-debug.log*
+*.webm
+*.mkv
+*.mp4
+*.mp3
 
 # Environment & Local Secrets
 .env

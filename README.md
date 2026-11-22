@@ -238,8 +238,8 @@ npm run dist
 *Or execute the automated builder script: [`Build-BroTube.bat`](Build-BroTube.bat).*
 
 The output binaries will be generated inside the `dist/` directory:
-- `dist/BroTube-Setup-1.0.0.exe` (Full NSIS Installer with desktop & start menu shortcuts)
-- `dist/BroTube-1.0.0-portable.exe` (Standalone portable executable)
+- `dist/BroTube Setup 1.0.1.exe` (Full NSIS Installer with desktop & start menu shortcuts)
+- `dist/BroTube 1.0.1.exe` (Standalone portable executable)
 
 ---
 

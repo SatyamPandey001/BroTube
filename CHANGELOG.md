@@ -2,6 +2,15 @@
 
 All notable changes to BroTube are documented here.
 
+## [1.0.1] — 2026-11-22
+
+### Fixed
+- **HTTP 403 Forbidden Auto-Recovery** — Eliminated stream 403 rejections by checking login tokens (`LOGIN_INFO`/`SAPISID`) before passing cookies to yt-dlp, and added automatic one-shot fallback retry without cookies on 403 status.
+- **Genuine Standalone Engine Upgrade** — Replaced the 108 KB pip python wrapper shim with the official 22.4 MB standalone `yt-dlp.exe` binary, resolving missing python executable errors on clean systems and compiled builds.
+- **Standalone Binary Validation Guard** — Enforced a minimum 1 MB binary size check in `resolveYtDlpRunner()` to guarantee only authentic standalone executables are copied to AppData or executed.
+- **Child Process Environment Augmentation** — Automatically augments PATH for child spawn calls with local Node and Gyan FFmpeg paths if present.
+- **Window Close Fast-Path** — Windows close button now cleanly closes the app when 0 downloads or conversions are active, preventing deadlock.
+
 ## [1.0.0] — 2026-10-18
 
 ### Added

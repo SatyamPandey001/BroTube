@@ -7,6 +7,21 @@ updated: 2026-10-10
 
 # 📝 Session Log & Milestone Tracking
 
+## 📅 Session 5: 2026-11-22 (Production Hardening & Download 403 / Standalone Binary Fixes)
+
+### Accomplished:
+- [x] Identified root cause of download failures in dev and packaged `.exe`:
+  - `brotube_cookies.enc` persisted unauthenticated guest cookies that caused YouTube Google Video Server CDN to reject streams with `HTTP Error 403: Forbidden`.
+  - Bundled `bin/yt-dlp.exe` was a 108 KB pip script wrapper with a hardcoded developer path (`#!C:\Users\GAURI\...`) instead of a genuine standalone executable.
+- [x] Upgraded `bin/yt-dlp.exe` to the official standalone 22.4 MB PyInstaller binary from GitHub Releases (yt-dlp 2026.10.26).
+- [x] Added `fs.statSync().size > 1024 * 1024` guard in `resolveYtDlpRunner()` to reject shims and ensure only genuine standalone binaries are executed or copied to AppData.
+- [x] Hardened `syncSessionCookies()` to only save/provide cookies if active authentication tokens (`LOGIN_INFO`, `SAPISID`, or `__Secure-3PSID`) exist; purged unauthenticated cookie files.
+- [x] Implemented automatic 1-shot retry without cookies in `startDownload()` and `getVideoInfo()` upon encountering `HTTP Error 403: Forbidden`, guaranteeing seamless downloads for unauthenticated users.
+- [x] Injected augmented PATH in child process spawning for reliable detection of bundled or system tools (Node, FFmpeg, AppData bin).
+- [x] Added window close fast-path in `index.js` when `runningTasks === 0`, preventing UI close deadlocks.
+- [x] Tested live download end-to-end with verified 100% completion.
+- [x] Updated self-check test suite (`test/self-check.js`) with 403 auto-recovery and standalone binary assertions.
+
 ## 📅 Session 1: 2026-10-10 (Kickoff & Core Assembly)
 
 ### Accomplished:

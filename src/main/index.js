@@ -59,10 +59,12 @@ function logDebug(category, message, details = null) {
   if (debugLogBuffer.length > MAX_DEBUG_LOGS) {
     debugLogBuffer.shift();
   }
-  const formatted = `[${ts}] [${entry.category}] ${entry.message}${details ? ' ' + JSON.stringify(details) : ''}\n`;
-  try {
-    fs.appendFileSync(getDebugLogFilePath(), formatted, 'utf8');
-  } catch {}
+  if (isDebugModeEnabled) {
+    const formatted = `[${ts}] [${entry.category}] ${entry.message}${details ? ' ' + JSON.stringify(details) : ''}\n`;
+    try {
+      fs.appendFile(getDebugLogFilePath(), formatted, 'utf8', () => {});
+    } catch {}
+  }
   if (mainWindow && !mainWindow.isDestroyed()) {
     try {
       mainWindow.webContents.send('debug-log', entry);

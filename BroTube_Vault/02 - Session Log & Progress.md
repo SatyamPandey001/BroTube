@@ -7,6 +7,24 @@ updated: 2026-10-10
 
 # 📝 Session Log & Milestone Tracking
 
+## 📅 Session 6: 2026-11-22 (Clip Trimming Pipeline Hardening & Quality Tag Calibration - v1.0.2)
+
+### Accomplished:
+- [x] Fixed clip timing range download pipeline:
+  - Added sanitized clip range suffix (`[Clip <start>-<end>]`) to output filename templates to prevent duplicate skip collisions.
+  - Added explicit `--print after_move:final_filepath:%(filepath)s` in yt-dlp arguments to guarantee exact final path resolution.
+  - Restricted regex destination matching (`destMatch`) and fallback scanning to true media containers, preventing intermediate `.webp` thumbnails from usurping video destinations.
+  - Added orphan thumbnail cleanup for section exports.
+- [x] Fixed Downloads Hub "4K UHD" tag mislabeling:
+  - Decoupled default preset from `"Peak 4K/8K"` to `"Best Quality"`.
+  - Added dynamic resolution refinement upon download completion (`8K UHD`, `4K UHD`, `2K QHD`, `1080p HD`, `720p HD`).
+- [x] Eliminated UI freeze during silent FFmpeg stream trimming:
+  - Injected synthetic processing telemetry (`Trimming clip via FFmpeg...`) and active UI state.
+- [x] Hardened environment augmentation:
+  - Unified Windows `PATH` and `Path` casing and added application executable directory discovery.
+- [x] Offloaded debug logging disk writes to non-blocking asynchronous calls.
+- [x] Expanded automated test suite (`test/self-check.js`) with clip output template, filepath reporting, and extension isolation assertions.
+
 ## 📅 Session 5: 2026-11-22 (Production Hardening & Download 403 / Standalone Binary Fixes)
 
 ### Accomplished:

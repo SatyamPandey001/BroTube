@@ -2,6 +2,16 @@
 
 All notable changes to BroTube are documented here.
 
+## [1.0.2] — 2026-11-22
+
+### Fixed
+- **Clip / Time-Range Download Pipeline** — Added unique, sanitized clip timing range suffixes (`[Clip <start>-<end>]`) to output filename templates to prevent yt-dlp from skipping clips when the full video already exists.
+- **Thumbnail WebP Destination Hijacking** — Restricted destination path matching (`destMatch`) to only accept target media containers (`.mkv`, `.mp4`, `.webm` for video; `.mp3`, `.m4a`, etc. for audio), preventing temporary `.webp` thumbnails from being misidentified as the final downloaded video.
+- **Clip Cutting Telemetry Feedback** — Added synthetic progress reporting (`Trimming clip via FFmpeg...`) and active UI indicators so clip cutting no longer appears frozen at 0% during silent FFmpeg stream trims.
+- **Downloads Hub Quality Tag Accuracy** — Decoupled the default download preset from `"Peak 4K/8K"` to `"Best Quality"` and dynamically updated badges upon download completion to match the true downloaded resolution (`8K UHD`, `4K UHD`, `2K QHD`, `1080p HD`, `720p HD`).
+- **Child Process Node Runtime Discovery** — Ensured `PATH` and `Path` environment variables are uniformly augmented across Windows casing conventions, ensuring standalone yt-dlp locates Node.js for deciphering challenges.
+- **Main Thread Asynchronous Logging** — Gated and offloaded disk append operations in `logDebug` to eliminate synchronous disk I/O micro-stutters during high-speed downloads.
+
 ## [1.0.1] — 2026-11-22
 
 ### Fixed

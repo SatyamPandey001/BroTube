@@ -30,8 +30,11 @@ function getAugmentedEnv(customEnv = {}) {
     if (ffmpegDir && fs.existsSync(ffmpegDir)) extraPaths.push(ffmpegDir);
     const userBin = getUserBinDir();
     if (fs.existsSync(userBin)) extraPaths.push(userBin);
+    if (process.execPath) extraPaths.push(path.dirname(process.execPath));
     if (extraPaths.length > 0) {
-      env.PATH = extraPaths.join(';') + ';' + (env.PATH || '');
+      const augmented = extraPaths.join(';') + ';' + (env.PATH || env.Path || '');
+      env.PATH = augmented;
+      env.Path = augmented;
     }
   }
   return env;
@@ -638,6 +641,7 @@ function buildDownloadArgs(options = {}) {
       '--newline',
       '--progress',
       '--print', 'after_video:video_title:%(title)s',
+      '--print', 'after_move:final_filepath:%(filepath)s',
       '--no-simulate',
       '--no-playlist',
       '--skip-download',
@@ -660,6 +664,7 @@ function buildDownloadArgs(options = {}) {
       '--newline',
       '--progress',
       '--print', 'after_video:video_title:%(title)s',
+      '--print', 'after_move:final_filepath:%(filepath)s',
       '--no-simulate',
       '--no-playlist',
       '--skip-download',
@@ -692,13 +697,17 @@ function buildDownloadArgs(options = {}) {
     } catch {}
   }
 
+  const clipSuffix = (timeRange && typeof timeRange === 'string' && timeRange.trim().length > 0)
+    ? ` [Clip ${timeRange.replace(/^\*/, '').trim().replace(/[:*?"<>|\\/]/g, '.')}]`
+    : '';
+
   const outputTemplate = isPlaylist
     ? (isAudioOnly
-        ? path.join(targetFolder, '%(playlist_title|Playlist)s', '%(playlist_index|01)02d - %(title)s.%(ext)s')
-        : path.join(targetFolder, '%(playlist_title|Playlist)s', '%(playlist_index|01)02d - %(title)s [%(resolution)s].%(ext)s'))
+        ? path.join(targetFolder, '%(playlist_title|Playlist)s', '%(playlist_index|01)02d - %(title)s' + clipSuffix + '.%(ext)s')
+        : path.join(targetFolder, '%(playlist_title|Playlist)s', '%(playlist_index|01)02d - %(title)s' + clipSuffix + ' [%(resolution)s].%(ext)s'))
     : (isAudioOnly
-        ? path.join(targetFolder, '%(title)s.%(ext)s')
-        : path.join(targetFolder, '%(title)s [%(resolution)s].%(ext)s'));
+        ? path.join(targetFolder, '%(title)s' + clipSuffix + '.%(ext)s')
+        : path.join(targetFolder, '%(title)s' + clipSuffix + ' [%(resolution)s].%(ext)s'));
 
   const baseArgs = getBaseYtDlpArgs(cookiePath);
   const args = [
@@ -706,6 +715,7 @@ function buildDownloadArgs(options = {}) {
     '--newline',
     '--progress',
     '--print', 'after_video:video_title:%(title)s',
+    '--print', 'after_move:final_filepath:%(filepath)s',
     '--no-simulate',
     isPlaylist ? '--yes-playlist' : '--no-playlist',
     '-f', formatSelector,
@@ -853,17 +863,52 @@ function startDownload(options, onProgress, onComplete, onError) {
             line
           });
         }
+      } else if (options.timeRange && (line.includes('Downloading 1 time ranges:') || line.includes('Destination:') || line.includes('[info] Downloading'))) {
+        if (typeof onProgress === 'function') {
+          onProgress({
+            taskId,
+            title: currentTitle,
+            playlistInfo,
+            speed: 'Trimming clip via FFmpeg...',
+            eta: 'Processing clip',
+            line
+          });
+        }
+      }
+
+      const validExtRegex = options.isThumbnailOnly
+        ? /\.(?:png|jpg|webp)$/i
+        : (options.isSubtitlesOnly
+            ? /\.(?:srt|vtt)$/i
+            : (options.isAudioOnly
+                ? /\.(?:mp3|m4a|flac|opus|wav)$/i
+                : /\.(?:mkv|mp4|webm)$/i));
+
+      // Capture final destination file from explicit after_move print
+      const filepathMatch = line.match(/^final_filepath:(.+)$/);
+      if (filepathMatch) {
+        const candidate = filepathMatch[1].trim();
+        if (validExtRegex.test(candidate)) {
+          finalPath = candidate;
+          if (!currentTitle) {
+            const fileBase = path.basename(finalPath).replace(/\.[^.]+$/, '').replace(/\s*\[[^\]]+\]$/, '');
+            if (fileBase) currentTitle = fileBase;
+          }
+        }
       }
 
       // Capture final destination file (both newly merged/downloaded and already-downloaded files)
       const destMatch = line.match(/\[(?:Merger|download|ExtractAudio|Thumbnails|Subtitles)\]\s+.*?(?:Merging formats into|Destination:|into|Writing(?: video)? thumbnail to:|Writing video subtitles to:)\s+["']?([^"'\r\n]+\.(?:mkv|mp4|webm|mp3|m4a|flac|opus|png|jpg|webp|srt|vtt))["']?/i) ||
                         line.match(/\[download\]\s+["']?([^"'\r\n]+\.(?:mkv|mp4|webm|mp3|m4a|flac|opus|png|jpg|webp|srt|vtt))["']?\s+has already been downloaded/i) ||
                         line.match(/(?:Writing(?: video)? thumbnail to:|Writing video subtitles to:)\s+["']?([^"'\r\n]+\.(?:png|jpg|webp|srt|vtt))["']?/i);
-      if (destMatch) {
-        finalPath = destMatch[1];
-        if (!currentTitle) {
-          const fileBase = path.basename(destMatch[1]).replace(/\.[^.]+$/, '').replace(/\s*\[\d+p\]$/, '');
-          if (fileBase) currentTitle = fileBase;
+      if (destMatch && (!finalPath || !validExtRegex.test(finalPath))) {
+        const candidate = destMatch[1];
+        if (validExtRegex.test(candidate)) {
+          finalPath = candidate;
+          if (!currentTitle) {
+            const fileBase = path.basename(destMatch[1]).replace(/\.[^.]+$/, '').replace(/\s*\[\d+p\]$/, '');
+            if (fileBase) currentTitle = fileBase;
+          }
         }
       }
     }
@@ -901,8 +946,43 @@ function startDownload(options, onProgress, onComplete, onError) {
     else if (options.isThumbnailOnly) subFolder = 'thumbnails';
     else if (options.isSubtitlesOnly) subFolder = 'subtitles';
     const targetFolder = path.join(options.downloadDir || getDefaultDownloadDir(), subFolder);
+    const validExtRegex = options.isThumbnailOnly
+      ? /\.(?:png|jpg|webp)$/i
+      : (options.isSubtitlesOnly
+          ? /\.(?:srt|vtt)$/i
+          : (options.isAudioOnly
+              ? /\.(?:mp3|m4a|flac|opus|wav)$/i
+              : /\.(?:mkv|mp4|webm)$/i));
+
     if (code === 0) {
       activeRetryHandles.delete(taskId);
+      if (!finalPath || !fs.existsSync(finalPath) || fs.statSync(finalPath).isDirectory() || !validExtRegex.test(finalPath)) {
+        try {
+          if (fs.existsSync(targetFolder)) {
+            const files = fs.readdirSync(targetFolder)
+              .filter(f => validExtRegex.test(f))
+              .map(f => ({
+                full: path.join(targetFolder, f),
+                time: fs.statSync(path.join(targetFolder, f)).mtimeMs
+              })).sort((a, b) => b.time - a.time);
+            if (files.length > 0 && (Date.now() - files[0].time) < 60000) {
+              finalPath = files[0].full;
+            }
+          }
+        } catch {}
+      }
+      // If a leftover unmerged thumbnail exists with the same clip tag, clean it up
+      if (options.timeRange && finalPath && validExtRegex.test(finalPath) && !options.isThumbnailOnly) {
+        try {
+          const rawBase = finalPath.replace(/\.[^.]+$/, '');
+          for (const ext of ['.webp', '.jpg', '.png']) {
+            const thumbPath = `${rawBase}${ext}`;
+            if (fs.existsSync(thumbPath) && thumbPath !== finalPath) {
+              fs.unlinkSync(thumbPath);
+            }
+          }
+        } catch {}
+      }
       if (downloaderLogger) {
         downloaderLogger('DOWNLOAD', `Task ${taskId} finished successfully (alreadyDownloaded: ${isAlreadyDownloaded})`, { taskId, finalPath: finalPath || targetFolder, alreadyDownloaded: isAlreadyDownloaded });
       }

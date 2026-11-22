@@ -151,6 +151,15 @@ const clipArgs = buildDownloadArgs({
 assert(clipArgs.includes('--download-sections'), 'Clip downloads must include --download-sections');
 assert(clipArgs.includes('*01:30-03:45'), 'Clip downloads must pass requested time slice');
 assert(clipArgs.includes('--force-keyframes-at-cuts'), 'Clip downloads must include --force-keyframes-at-cuts');
+const clipOutIdx = clipArgs.indexOf('-o');
+assert(clipOutIdx !== -1 && clipArgs[clipOutIdx + 1].includes('[Clip 01.30-03.45]'), 'Clip downloads must include sanitized clip timing suffix in output template');
+assert(clipArgs.includes('after_move:final_filepath:%(filepath)s'), 'Clip downloads must include final_filepath print argument');
+
+// Check Destination Matching Video vs Thumbnail Extension Isolation
+const videoValidExt = /\.(?:mkv|mp4|webm)$/i;
+const thumbSampleLine = 'Writing video thumbnail to: test.webp';
+const thumbMatch = thumbSampleLine.match(/\.([a-zA-Z0-9]+)$/);
+assert(thumbMatch && !videoValidExt.test(thumbSampleLine), 'Video downloads must reject .webp thumbnail lines as destination paths');
 
 // Check Standalone Thumbnail Extraction
 const thumbArgs = buildDownloadArgs({

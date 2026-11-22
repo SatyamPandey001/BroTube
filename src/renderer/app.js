@@ -1848,6 +1848,15 @@ function initApp() {
     return `${String(remM).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
 
+  function parseSeconds(str) {
+    if (!str || typeof str !== 'string') return 0;
+    const parts = str.trim().split(':').map(Number);
+    if (parts.some(isNaN)) return 0;
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return parts[0] || 0;
+  }
+
   // Direct 1-Click Download Preference Controller
   let isDirectDl = false;
   try {
@@ -1940,7 +1949,18 @@ function initApp() {
       const meta = await getActiveVideoMeta();
       title = (meta && meta.title) || (isPlaylist ? 'Playlist Download' : 'YouTube Download');
     }
-    const mediaType = isAudioOnly ? `Audio (${audioFormat.toUpperCase()})` : (quality === 'best' ? 'Peak 4K/8K' : `${quality}p`);
+    let mediaType;
+    if (isAudioOnly) {
+      mediaType = `Audio (${audioFormat.toUpperCase()})`;
+    } else if (quality === 'best') {
+      mediaType = 'Best Quality';
+    } else if (quality === '2160') {
+      mediaType = '4K UHD (2160p)';
+    } else if (quality === '1440') {
+      mediaType = '2K QHD (1440p)';
+    } else {
+      mediaType = `${quality}p`;
+    }
     const label = isPlaylist ? `Playlist • ${mediaType}` : mediaType;
 
     addDownloadItem(taskId, title, label);
@@ -2250,8 +2270,18 @@ function initApp() {
       const start = (timeStart?.value || '00:00').trim();
       const end = (timeEnd?.value || '').trim();
       if (start || end) {
+        const startSec = parseSeconds(start);
+        const endSec = end ? parseSeconds(end) : Infinity;
+        if (end && endSec <= startSec) {
+          showSpatialAlert({
+            title: 'Invalid Clip Timing Range',
+            icon: 'info',
+            message: 'Clip end time must be greater than start time. Please adjust your timing range.'
+          });
+          return;
+        }
         timeRange = `*${start || '0'}-${end || 'inf'}`;
-        clipLabel = ` [${start || '0'} - ${end || 'end'}]`;
+        clipLabel = ` [Clip ${start || '0'} - ${end || 'end'}]`;
       }
     }
 
@@ -2259,7 +2289,18 @@ function initApp() {
 
     const taskId = `dl-${Date.now()}`;
     const title = (currentVideoData && currentVideoData.title) || previewTitle.textContent || (isPlaylist ? 'Playlist Download' : 'Video Download');
-    const mediaType = isAudioOnly ? `Audio (${audioFormat.toUpperCase()})` : (quality === 'best' ? 'Peak 4K/8K' : `${quality}p`);
+    let mediaType;
+    if (isAudioOnly) {
+      mediaType = `Audio (${audioFormat.toUpperCase()})`;
+    } else if (quality === 'best') {
+      mediaType = 'Best Quality';
+    } else if (quality === '2160') {
+      mediaType = '4K UHD (2160p)';
+    } else if (quality === '1440') {
+      mediaType = '2K QHD (1440p)';
+    } else {
+      mediaType = `${quality}p`;
+    }
     const label = isPlaylist ? `Playlist • ${mediaType}${clipLabel}` : `${mediaType}${clipLabel}`;
     addDownloadItem(taskId, title, label);
 
@@ -2318,15 +2359,33 @@ function initApp() {
     } else if (fmtLower.includes('sub')) {
       badgeClass = 'dl-badge-subs';
       badgeText = 'SUBS';
-    } else if (fmtLower.includes('mp3') || fmtLower.includes('audio')) {
+    } else if (fmtLower.includes('mp3') || fmtLower.includes('audio') || fmtLower.includes('flac') || fmtLower.includes('opus')) {
       badgeClass = 'dl-badge-audio';
       badgeText = 'AUDIO';
-    } else if (fmtLower.includes('2160') || fmtLower.includes('4k')) {
-      badgeClass = 'dl-badge-4k';
-      badgeText = '4K UHD';
     } else if (fmtLower.includes('playlist')) {
       badgeClass = 'dl-badge-video';
       badgeText = 'PLAYLIST';
+    } else if (fmtLower.includes('clip')) {
+      badgeClass = 'dl-badge-video';
+      badgeText = 'CLIP';
+    } else if (fmtLower.includes('4320') || fmtLower.includes('8k')) {
+      badgeClass = 'dl-badge-4k';
+      badgeText = '8K UHD';
+    } else if (fmtLower.includes('2160') || (fmtLower.includes('4k') && !fmtLower.includes('peak') && !fmtLower.includes('best'))) {
+      badgeClass = 'dl-badge-4k';
+      badgeText = '4K UHD';
+    } else if (fmtLower.includes('1440') || fmtLower.includes('2k')) {
+      badgeClass = 'dl-badge-video';
+      badgeText = '2K QHD';
+    } else if (fmtLower.includes('1080')) {
+      badgeClass = 'dl-badge-video';
+      badgeText = '1080p HD';
+    } else if (fmtLower.includes('720')) {
+      badgeClass = 'dl-badge-video';
+      badgeText = '720p HD';
+    } else if (fmtLower.includes('best') || fmtLower.includes('peak')) {
+      badgeClass = 'dl-badge-video';
+      badgeText = 'BEST';
     }
 
     const item = document.createElement('div');
@@ -2398,6 +2457,35 @@ function initApp() {
     item.classList.remove('active');
     item.classList.add('completed');
     item.setAttribute('data-status', 'completed');
+
+    // Refine badge to actual downloaded resolution when final file path is confirmed
+    if (finalPath && typeof finalPath === 'string') {
+      const badgeEl = item.querySelector('.dl-badge');
+      const resMatch = finalPath.match(/\[(?:(\d+)x)?(\d+)p?\](?:\.[a-zA-Z0-9]+)?$/);
+      if (badgeEl && resMatch && !badgeEl.classList.contains('dl-badge-audio') && !badgeEl.classList.contains('dl-badge-thumb') && !badgeEl.classList.contains('dl-badge-subs')) {
+        const width = resMatch[1] ? parseInt(resMatch[1], 10) : 0;
+        const height = parseInt(resMatch[2], 10);
+        if (height >= 4300 || width >= 7600) {
+          badgeEl.className = 'dl-badge dl-badge-4k';
+          badgeEl.textContent = '8K UHD';
+        } else if (height >= 2100 || width >= 3800) {
+          badgeEl.className = 'dl-badge dl-badge-4k';
+          badgeEl.textContent = '4K UHD';
+        } else if (height >= 1400 || width >= 2500) {
+          badgeEl.className = 'dl-badge dl-badge-video';
+          badgeEl.textContent = '2K QHD';
+        } else if (height >= 1000 || width >= 1900) {
+          badgeEl.className = 'dl-badge dl-badge-video';
+          badgeEl.textContent = '1080p HD';
+        } else if (height >= 700 || width >= 1200) {
+          badgeEl.className = 'dl-badge dl-badge-video';
+          badgeEl.textContent = '720p HD';
+        } else if (height > 0) {
+          badgeEl.className = 'dl-badge dl-badge-video';
+          badgeEl.textContent = `${height}p`;
+        }
+      }
+    }
 
     const percentEl = item.querySelector('.dl-percent');
     if (percentEl) {
@@ -2519,8 +2607,16 @@ function initApp() {
           percentEl.textContent = `${data.percent}%`;
           fillEl.style.width = `${data.percent}%`;
         }
-        if (data.speed) speedEl.textContent = `${data.speed} (${data.total || ''})`;
-        if (data.eta) etaEl.textContent = `ETA: ${data.eta}`;
+        if (data.speed) {
+          speedEl.textContent = data.total ? `${data.speed} (${data.total})` : data.speed;
+          if (data.speed.includes('Trimming clip')) {
+            fillEl.style.width = '35%';
+            etaEl.textContent = data.eta || 'Processing clip...';
+          }
+        }
+        if (data.eta && (!data.speed || !data.speed.includes('Trimming clip'))) {
+          etaEl.textContent = data.eta.startsWith('ETA:') ? data.eta : `ETA: ${data.eta}`;
+        }
       }
     });
   }

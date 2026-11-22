@@ -85,7 +85,7 @@
           </div>
           <div class="splash-card-content">
             <div class="splash-card-title">FFmpeg Transcoder</div>
-            <div class="splash-card-desc">Instant offline stream converter & clip trimmer</div>
+            <div class="splash-card-desc">Instant offline stream converter & media extractor</div>
           </div>
         </div>
       </div>
@@ -510,30 +510,6 @@
             </select>
           </div>
 
-          <div class="time-range-box">
-            <label class="custom-check" style="margin-bottom: 0;">
-              <input type="checkbox" id="check-time-range">
-              <span style="font-weight: 600; color: var(--accent-cyan); display: flex; align-items: center; gap: 6px;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
-                <span>Clip / Time-Range Download</span>
-              </span>
-            </label>
-            <div id="time-range-controls" class="time-range-controls hidden">
-              <div class="time-input-wrap">
-                <span class="time-label">Start</span>
-                <input type="text" id="time-start" class="time-input" placeholder="00:00" value="00:00">
-              </div>
-              <span class="time-divider">to</span>
-              <div class="time-input-wrap">
-                <span class="time-label">End</span>
-                <input type="text" id="time-end" class="time-input" placeholder="02:30">
-              </div>
-              <button id="btn-stamp-current" type="button" class="chip-btn time-stamp-btn" title="Set start time from current player timestamp">
-                Set Current
-              </button>
-            </div>
-          </div>
-
           <div class="checkbox-group">
             <label class="custom-check" id="label-check-playlist" style="display: none; color: var(--accent-cyan); font-weight: 500;">
               <input type="checkbox" id="check-playlist">
@@ -859,7 +835,7 @@
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </div>
           <span class="empty-title">Queue is Empty</span>
-          <p class="empty-desc">Lossless DASH 4K/8K, MP3 audio, thumbnails, and clip exports will appear here with live speed telemetry.</p>
+          <p class="empty-desc">Lossless DASH 4K/8K, MP3 audio, and media exports will appear here with live speed telemetry.</p>
           <div class="empty-actions">
             <button id="btn-empty-start-download" class="action-btn peak-btn empty-action-btn" type="button">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>

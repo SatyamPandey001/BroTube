@@ -622,7 +622,6 @@ function buildDownloadArgs(options = {}) {
     embedSubs = true,
     embedThumbnail = true,
     isPlaylist = false,
-    timeRange = null,
     isThumbnailOnly = false,
     isSubtitlesOnly = false
   } = options;
@@ -697,17 +696,13 @@ function buildDownloadArgs(options = {}) {
     } catch {}
   }
 
-  const clipSuffix = (timeRange && typeof timeRange === 'string' && timeRange.trim().length > 0)
-    ? ` [Clip ${timeRange.replace(/^\*/, '').trim().replace(/[:*?"<>|\\/]/g, '.')}]`
-    : '';
-
   const outputTemplate = isPlaylist
     ? (isAudioOnly
-        ? path.join(targetFolder, '%(playlist_title|Playlist)s', '%(playlist_index|01)02d - %(title)s' + clipSuffix + '.%(ext)s')
-        : path.join(targetFolder, '%(playlist_title|Playlist)s', '%(playlist_index|01)02d - %(title)s' + clipSuffix + ' [%(resolution)s].%(ext)s'))
+        ? path.join(targetFolder, '%(playlist_title|Playlist)s', '%(playlist_index|01)02d - %(title)s.%(ext)s')
+        : path.join(targetFolder, '%(playlist_title|Playlist)s', '%(playlist_index|01)02d - %(title)s [%(resolution)s].%(ext)s'))
     : (isAudioOnly
-        ? path.join(targetFolder, '%(title)s' + clipSuffix + '.%(ext)s')
-        : path.join(targetFolder, '%(title)s' + clipSuffix + ' [%(resolution)s].%(ext)s'));
+        ? path.join(targetFolder, '%(title)s.%(ext)s')
+        : path.join(targetFolder, '%(title)s [%(resolution)s].%(ext)s'));
 
   const baseArgs = getBaseYtDlpArgs(cookiePath);
   const args = [
@@ -752,12 +747,6 @@ function buildDownloadArgs(options = {}) {
   // Prevent one unavailable or age-restricted video from aborting entire playlist download
   if (isPlaylist) {
     args.push('--ignore-errors', '--no-abort-on-error');
-  }
-
-  if (timeRange && typeof timeRange === 'string' && timeRange.trim().length > 0) {
-    const cleanRange = timeRange.startsWith('*') ? timeRange.trim() : `*${timeRange.trim()}`;
-    args.push('--download-sections', cleanRange);
-    args.push('--force-keyframes-at-cuts');
   }
 
   args.push('--', targetUrl);
@@ -863,17 +852,6 @@ function startDownload(options, onProgress, onComplete, onError) {
             line
           });
         }
-      } else if (options.timeRange && (line.includes('Downloading 1 time ranges:') || line.includes('Destination:') || line.includes('[info] Downloading'))) {
-        if (typeof onProgress === 'function') {
-          onProgress({
-            taskId,
-            title: currentTitle,
-            playlistInfo,
-            speed: 'Trimming clip via FFmpeg...',
-            eta: 'Processing clip',
-            line
-          });
-        }
       }
 
       const validExtRegex = options.isThumbnailOnly
@@ -967,18 +945,6 @@ function startDownload(options, onProgress, onComplete, onError) {
               })).sort((a, b) => b.time - a.time);
             if (files.length > 0 && (Date.now() - files[0].time) < 60000) {
               finalPath = files[0].full;
-            }
-          }
-        } catch {}
-      }
-      // If a leftover unmerged thumbnail exists with the same clip tag, clean it up
-      if (options.timeRange && finalPath && validExtRegex.test(finalPath) && !options.isThumbnailOnly) {
-        try {
-          const rawBase = finalPath.replace(/\.[^.]+$/, '');
-          for (const ext of ['.webp', '.jpg', '.png']) {
-            const thumbPath = `${rawBase}${ext}`;
-            if (fs.existsSync(thumbPath) && thumbPath !== finalPath) {
-              fs.unlinkSync(thumbPath);
             }
           }
         } catch {}

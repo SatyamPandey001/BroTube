@@ -152,11 +152,6 @@ function initApp() {
   const btnStartProDownload = document.getElementById('btn-start-pro-download');
   const btnDlThumb = document.getElementById('btn-dl-thumb');
   const btnDlSubs = document.getElementById('btn-dl-subs');
-  const checkTimeRange = document.getElementById('check-time-range');
-  const timeRangeControls = document.getElementById('time-range-controls');
-  const timeStart = document.getElementById('time-start');
-  const timeEnd = document.getElementById('time-end');
-  const btnStampCurrent = document.getElementById('btn-stamp-current');
   const checkDirectDl = document.getElementById('check-direct-dl');
   const btnDirectDlToggle = document.getElementById('btn-direct-dl-toggle');
   const directDlLabel = document.getElementById('direct-dl-label');
@@ -1893,7 +1888,7 @@ function initApp() {
       const q = getSavedQuality();
       const qLabel = getQualityBadgeLabel(q);
       if (isDirectDl) {
-        btnQuickDownload.title = `Direct 1-Click Download [${qLabel}] (Shift+Click to change quality or clip)`;
+        btnQuickDownload.title = `Direct 1-Click Download [${qLabel}] (Shift+Click to change download settings)`;
       } else {
         btnQuickDownload.title = 'Download Video or Audio with Quality Selection';
       }
@@ -2028,11 +2023,6 @@ function initApp() {
       checkPlaylist.onchange = updateModalBtnText;
     }
 
-    if (checkTimeRange) checkTimeRange.checked = false;
-    if (timeRangeControls) timeRangeControls.classList.add('hidden');
-    if (timeStart) timeStart.value = '00:00';
-    if (timeEnd) timeEnd.value = '';
-
     const isPlPage = rawUrl.includes('/playlist') || (rawUrl.includes('list=') && !rawUrl.includes('watch?v='));
     const url = isPlPage ? cleanPlaylistUrl(rawUrl) : cleanVideoUrl(rawUrl);
     proModal.classList.remove('hidden');
@@ -2082,31 +2072,6 @@ function initApp() {
       // DOM metadata already displayed
     });
   };
-
-  // Time-Range Toggle & Current Time Stamper
-  if (checkTimeRange && timeRangeControls) {
-    checkTimeRange.addEventListener('change', () => {
-      if (checkTimeRange.checked) {
-        timeRangeControls.classList.remove('hidden');
-      } else {
-        timeRangeControls.classList.add('hidden');
-      }
-    });
-  }
-
-  if (btnStampCurrent && timeStart) {
-    btnStampCurrent.addEventListener('click', async () => {
-      try {
-        const secs = await webview.executeJavaScript(`(() => {
-          const v = document.querySelector('video');
-          return v ? v.currentTime : 0;
-        })()`);
-        if (typeof secs === 'number') {
-          timeStart.value = formatSeconds(secs);
-        }
-      } catch (_) {}
-    });
-  }
 
   // Standalone Asset Downloader (Artwork & Subtitles)
   async function triggerAssetDownload(type) {
@@ -2263,28 +2228,6 @@ function initApp() {
     const isAudioOnly = quality.startsWith('audio-');
     const audioFormat = isAudioOnly ? quality.replace('audio-', '') : 'mp3';
 
-    // Time-range clip parameters
-    let timeRange = null;
-    let clipLabel = '';
-    if (checkTimeRange && checkTimeRange.checked) {
-      const start = (timeStart?.value || '00:00').trim();
-      const end = (timeEnd?.value || '').trim();
-      if (start || end) {
-        const startSec = parseSeconds(start);
-        const endSec = end ? parseSeconds(end) : Infinity;
-        if (end && endSec <= startSec) {
-          showSpatialAlert({
-            title: 'Invalid Clip Timing Range',
-            icon: 'info',
-            message: 'Clip end time must be greater than start time. Please adjust your timing range.'
-          });
-          return;
-        }
-        timeRange = `*${start || '0'}-${end || 'inf'}`;
-        clipLabel = ` [Clip ${start || '0'} - ${end || 'end'}]`;
-      }
-    }
-
     proModal.classList.add('hidden');
 
     const taskId = `dl-${Date.now()}`;
@@ -2301,7 +2244,7 @@ function initApp() {
     } else {
       mediaType = `${quality}p`;
     }
-    const label = isPlaylist ? `Playlist • ${mediaType}${clipLabel}` : `${mediaType}${clipLabel}`;
+    const label = isPlaylist ? `Playlist • ${mediaType}` : mediaType;
     addDownloadItem(taskId, title, label);
 
     try {
@@ -2314,7 +2257,6 @@ function initApp() {
         audioFormat,
         embedSubs: checkSubs.checked,
         embedThumbnail: checkThumb.checked,
-        timeRange,
         downloadDir: customDownloadDir || undefined
       });
       markDownloadItemDone(taskId, res.finalPath, res?.alreadyDownloaded);
@@ -2365,9 +2307,6 @@ function initApp() {
     } else if (fmtLower.includes('playlist')) {
       badgeClass = 'dl-badge-video';
       badgeText = 'PLAYLIST';
-    } else if (fmtLower.includes('clip')) {
-      badgeClass = 'dl-badge-video';
-      badgeText = 'CLIP';
     } else if (fmtLower.includes('4320') || fmtLower.includes('8k')) {
       badgeClass = 'dl-badge-4k';
       badgeText = '8K UHD';
@@ -2609,12 +2548,8 @@ function initApp() {
         }
         if (data.speed) {
           speedEl.textContent = data.total ? `${data.speed} (${data.total})` : data.speed;
-          if (data.speed.includes('Trimming clip')) {
-            fillEl.style.width = '35%';
-            etaEl.textContent = data.eta || 'Processing clip...';
-          }
         }
-        if (data.eta && (!data.speed || !data.speed.includes('Trimming clip'))) {
+        if (data.eta) {
           etaEl.textContent = data.eta.startsWith('ETA:') ? data.eta : `ETA: ${data.eta}`;
         }
       }

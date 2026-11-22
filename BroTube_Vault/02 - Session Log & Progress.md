@@ -201,6 +201,16 @@ updated: 2026-10-10
 
 ---
 
+## 📅 Session 7 — Clip Feature Removal & Simplification (2026-11-22)
+
+- **Removed Clip / Time-Range Controls**:
+  - Removed `<div class="time-range-box">` and timestamp input elements from `src/renderer/index.html`.
+  - Removed all clip event listeners, input parsers, and `timeRange` payload parameters from `src/renderer/app.js`.
+  - Removed `--download-sections` and `--force-keyframes-at-cuts` from `src/main/downloader.js`.
+  - Updated test assertions in `test/self-check.js` (all 20 test suites pass).
+
+---
+
 ## 📌 Active Backlog & Future Milestones
 
 - [ ] Monitor YouTube anti-adblock scriptlet updates for future releases.

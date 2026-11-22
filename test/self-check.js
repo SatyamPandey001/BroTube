@@ -142,24 +142,12 @@ assert(!nanQualityArgs.some(a => a.includes('NaN')), 'buildDownloadArgs must not
 const numQualityArgs = buildDownloadArgs({ url: dirtyUrl, quality: '720p' });
 assert(numQualityArgs.some(a => a.includes('height<=720')), 'buildDownloadArgs must parse numeric quality correctly');
 
-// Check Clip / Time-Range Download Arguments
-const clipArgs = buildDownloadArgs({
-  url: dirtyUrl,
-  quality: '1080',
-  timeRange: '*01:30-03:45'
-});
-assert(clipArgs.includes('--download-sections'), 'Clip downloads must include --download-sections');
-assert(clipArgs.includes('*01:30-03:45'), 'Clip downloads must pass requested time slice');
-assert(clipArgs.includes('--force-keyframes-at-cuts'), 'Clip downloads must include --force-keyframes-at-cuts');
-const clipOutIdx = clipArgs.indexOf('-o');
-assert(clipOutIdx !== -1 && clipArgs[clipOutIdx + 1].includes('[Clip 01.30-03.45]'), 'Clip downloads must include sanitized clip timing suffix in output template');
-assert(clipArgs.includes('after_move:final_filepath:%(filepath)s'), 'Clip downloads must include final_filepath print argument');
-
 // Check Destination Matching Video vs Thumbnail Extension Isolation
 const videoValidExt = /\.(?:mkv|mp4|webm)$/i;
 const thumbSampleLine = 'Writing video thumbnail to: test.webp';
 const thumbMatch = thumbSampleLine.match(/\.([a-zA-Z0-9]+)$/);
 assert(thumbMatch && !videoValidExt.test(thumbSampleLine), 'Video downloads must reject .webp thumbnail lines as destination paths');
+assert(buildDownloadArgs({ url: dirtyUrl }).includes('after_move:final_filepath:%(filepath)s'), 'Download args must include final_filepath print argument');
 
 // Check Standalone Thumbnail Extraction
 const thumbArgs = buildDownloadArgs({
@@ -373,10 +361,6 @@ assert(indexHtml.includes('id="exit-status-pill"'), 'index.html must include exi
 assert(indexHtml.includes('id="btn-quick-share"'), 'index.html must include btn-quick-share element');
 assert(indexHtml.includes('id="select-language"'), 'index.html must include select-language dropdown');
 assert(indexHtml.includes('id="select-eq-preset"'), 'index.html must include select-eq-preset dropdown');
-assert(indexHtml.includes('id="check-time-range"'), 'index.html must include check-time-range element');
-assert(indexHtml.includes('id="time-start"'), 'index.html must include time-start element');
-assert(indexHtml.includes('id="time-end"'), 'index.html must include time-end element');
-assert(indexHtml.includes('id="btn-stamp-current"'), 'index.html must include btn-stamp-current element');
 assert(indexHtml.includes('data-theme='), 'index.html must include data-theme attribute');
 assert(indexHtml.includes('class="brand-logo-img"'), 'index.html must include brand-logo-img element');
 assert(indexHtml.includes('class="header-drag-filler"'), 'index.html must include header-drag-filler draggable area');
